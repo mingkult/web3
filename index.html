@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>單字接接樂</title>
+<style>
+:root{
+  --bg:#f7fbff; --card:#ffffff; --text:#17324d; --muted:#5f7185;
+  --primary:#0284c7; --primary2:#16a34a; --pink:#db2777;
+  --good:#15803d; --bad:#b91c1c; --line:#d9e7f2;
+  --shadow:0 18px 46px rgba(34,74,110,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--text)}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 10% 8%,rgba(186,230,253,.8),transparent 28%),
+    radial-gradient(circle at 90% 10%,rgba(249,168,212,.45),transparent 28%),
+    linear-gradient(135deg,#fffaf0,#f0f9ff 55%,#fdf2f8);
+  padding:16px;
+}
+button{font:inherit}
+.app{width:min(980px,100%);margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.title-wrap h1{font-size:clamp(1.5rem,4vw,2.4rem);margin:0}
+.title-wrap p{margin:4px 0 0;color:var(--muted)}
+.icon-btn,.btn,.control-btn{
+  min-height:46px;border:0;border-radius:14px;cursor:pointer;font-weight:800;
+  transition:transform .14s ease,opacity .14s ease,box-shadow .14s ease;
+}
+.icon-btn:active,.btn:active,.control-btn:active{transform:scale(.97)}
+.icon-btn:focus-visible,.btn:focus-visible,.control-btn:focus-visible{outline:3px solid rgba(2,132,199,.28);outline-offset:2px}
+.icon-btn{width:48px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 20px rgba(34,74,110,.08)}
+.panel{background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.95);border-radius:24px;box-shadow:var(--shadow);padding:16px}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.stat{background:#f8fbfd;border:1px solid var(--line);border-radius:16px;padding:10px 12px;text-align:center}
+.stat small{display:block;color:var(--muted);font-weight:700}
+.stat strong{display:block;font-size:1.25rem;margin-top:2px}
+.prompt{
+  text-align:center;padding:14px 12px;margin-bottom:12px;border-radius:18px;
+  background:linear-gradient(135deg,#e0f2fe,#fce7f3);
+}
+.prompt small{display:block;color:var(--muted);font-weight:700}
+.prompt strong{display:block;font-size:clamp(1.8rem,6vw,3.2rem);margin-top:4px}
+.game{
+  position:relative;height:min(62vh,560px);min-height:390px;overflow:hidden;
+  border-radius:22px;border:2px solid #cfe6f5;background:
+  linear-gradient(#dff4ff 0 58%,#e8f7df 58% 100%);
+  touch-action:none;
+}
+.cloud{position:absolute;width:90px;height:30px;background:#fff;border-radius:30px;opacity:.7}
+.cloud:before,.cloud:after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud:before{width:38px;height:38px;left:12px;top:-16px}
+.cloud:after{width:46px;height:46px;right:12px;top:-22px}
+.c1{left:8%;top:8%}.c2{right:8%;top:16%;transform:scale(.8)}
+.word{
+  position:absolute;top:-64px;width:132px;min-height:52px;padding:10px 12px;
+  border-radius:16px;background:#fff;border:2px solid #b6d9ee;
+  display:grid;place-items:center;text-align:center;font-weight:900;font-size:1.12rem;
+  box-shadow:0 10px 24px rgba(34,74,110,.12);user-select:none;
+}
+.basket{
+  position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+  width:120px;height:70px;border-radius:20px 20px 30px 30px;
+  background:linear-gradient(135deg,#fb923c,#f59e0b);
+  border:4px solid #fff3c4;box-shadow:0 12px 28px rgba(180,83,9,.2);
+}
+.basket:before{
+  content:"🧺";position:absolute;inset:0;display:grid;place-items:center;font-size:42px;
+}
+.flash{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:clamp(1.2rem,4vw,2rem);font-weight:950;pointer-events:none;opacity:0}
+.flash.show{animation:pop .5s ease}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-40%) scale(.8)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-65%) scale(1)}}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.control-btn{background:#fff;border:1px solid var(--line);font-size:1.3rem;box-shadow:0 8px 18px rgba(34,74,110,.08)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:12px 16px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;box-shadow:0 12px 24px rgba(2,132,199,.2)}
+.btn.secondary{background:#fff;color:var(--primary);border:1px solid var(--line);box-shadow:none}
+.message{margin-top:12px;min-height:26px;text-align:center;font-weight:800}
+.message.good{color:var(--good)} .message.bad{color:var(--bad)}
+.overlay{
+  position:absolute;inset:0;background:rgba(255,255,255,.88);display:grid;place-items:center;z-index:10;padding:20px
+}
+.overlay-card{max-width:420px;text-align:center}
+.overlay-card h2{font-size:clamp(1.7rem,5vw,2.6rem);margin:0 0 10px}
+.overlay-card p{color:var(--muted);line-height:1.7}
+.hidden{display:none!important}
+@media(max-width:620px){
+  body{padding:10px}
+  .hud{grid-template-columns:repeat(2,1fr)}
+  .game{min-height:420px;height:58vh}
+  .word{width:112px;font-size:1rem}
+  .basket{width:104px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="topbar">
+    <div class="title-wrap">
+      <h1>🍎 單字接接樂</h1>
+      <p>看中文，接住正確的英文單字！</p>
+    </div>
+    <button id="soundBtn" class="icon-btn" aria-label="切換音效" title="切換音效">🔊</button>
+  </div>
+
+  <section class="panel">
+    <div class="hud" aria-label="遊戲狀態">
+      <div class="stat"><small>分數</small><strong id="score">0</strong></div>
+      <div class="stat"><small>連擊</small><strong id="combo">0</strong></div>
+      <div class="stat"><small>愛心</small><strong id="lives">❤️❤️❤️</strong></div>
+      <div class="stat"><small>進度</small><strong id="progress">0 / 10</strong></div>
+    </div>
+
+    <div class="prompt">
+      <small>請接住英文</small>
+      <strong id="promptText">準備開始</strong>
+    </div>
+
+    <div id="game" class="game" aria-label="遊戲區">
+      <div class="cloud c1"></div><div class="cloud c2"></div>
+      <div id="basket" class="basket" aria-label="接物籃子"></div>
+      <div id="flash" class="flash" aria-live="polite"></div>
+
+      <div id="startOverlay" class="overlay">
+        <div class="overlay-card">
+          <h2>準備好了嗎？</h2>
+          <p>用鍵盤 ← → 或下方按鈕移動籃子。接住符合中文提示的英文單字。</p>
+          <button id="startBtn" class="btn">開始遊戲</button>
+        </div>
+      </div>
+
+      <div id="endOverlay" class="overlay hidden">
+        <div class="overlay-card">
+          <h2 id="endTitle">完成！</h2>
+          <p id="endText"></p>
+          <button id="playAgainBtn" class="btn">再玩一次</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="leftBtn" class="control-btn" aria-label="向左移動">⬅️ 左</button>
+      <button id="rightBtn" class="control-btn" aria-label="向右移動">右 ➡️</button>
+    </div>
+
+    <div class="actions">
+      <button id="restartBtn" class="btn secondary">重新開始</button>
+    </div>
+    <div id="message" class="message" aria-live="polite"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const WORDS = [
+    {zh:"蘋果", en:"apple"},
+    {zh:"貓", en:"cat"},
+    {zh:"狗", en:"dog"},
+    {zh:"書", en:"book"},
+    {zh:"水", en:"water"},
+    {zh:"學校", en:"school"},
+    {zh:"老師", en:"teacher"},
+    {zh:"朋友", en:"friend"},
+    {zh:"太陽", en:"sun"},
+    {zh:"月亮", en:"moon"},
+    {zh:"桌子", en:"table"},
+    {zh:"椅子", en:"chair"},
+    {zh:"牛奶", en:"milk"},
+    {zh:"鳥", en:"bird"},
+    {zh:"魚", en:"fish"}
+  ];
+
+  const els = {
+    game: document.getElementById("game"),
+    basket: document.getElementById("basket"),
+    prompt: document.getElementById("promptText"),
+    score: document.getElementById("score"),
+    combo: document.getElementById("combo"),
+    lives: document.getElementById("lives"),
+    progress: document.getElementById("progress"),
+    message: document.getElementById("message"),
+    flash: document.getElementById("flash"),
+    startOverlay: document.getElementById("startOverlay"),
+    endOverlay: document.getElementById("endOverlay"),
+    endTitle: document.getElementById("endTitle"),
+    endText: document.getElementById("endText"),
+    startBtn: document.getElementById("startBtn"),
+    playAgainBtn: document.getElementById("playAgainBtn"),
+    restartBtn: document.getElementById("restartBtn"),
+    leftBtn: document.getElementById("leftBtn"),
+    rightBtn: document.getElementById("rightBtn"),
+    soundBtn: document.getElementById("soundBtn")
+  };
+
+  let state = "ready";
+  let score = 0, combo = 0, lives = 3, round = 0;
+  let basketX = 0.5;
+  let falling = [];
+  let rafId = null;
+  let lastTime = 0;
+  let soundOn = true;
+  let audioCtx = null;
+  const totalRounds = 10;
+
+  function beep(type="good"){
+    if(!soundOn) return;
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === "suspended") audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = type==="good" ? 660 : type==="bad" ? 220 : 880;
+      gain.gain.setValueAtTime(.06,audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime+.16);
+    }catch(e){}
+  }
+
+  function shuffle(arr){
+    const a=[...arr];
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function updateHud(){
+    els.score.textContent=score;
+    els.combo.textContent=combo;
+    els.lives.textContent="❤️".repeat(lives)+"♡".repeat(Math.max(0,3-lives));
+    els.progress.textContent=`${Math.min(round,totalRounds)} / ${totalRounds}`;
+  }
+
+  function setMessage(text,type=""){
+    els.message.textContent=text;
+    els.message.className="message"+(type?` ${type}`:"");
+  }
+
+  function flash(text){
+    els.flash.textContent=text;
+    els.flash.classList.remove("show");
+    void els.flash.offsetWidth;
+    els.flash.classList.add("show");
+  }
+
+  function clearWords(){
+    falling.forEach(o=>o.el.remove());
+    falling=[];
+  }
+
+  function resetGame(){
+    cancelAnimationFrame(rafId);
+    clearWords();
+    score=0; combo=0; lives=3; round=0; basketX=.5; lastTime=0;
+    state="ready";
+    els.basket.style.left="50%";
+    els.prompt.textContent="準備開始";
+    setMessage("");
+    els.endOverlay.classList.add("hidden");
+    els.startOverlay.classList.remove("hidden");
+    updateHud();
+  }
+
+  function startGame(){
+    if(state==="playing") return;
+    clearWords();
+    score=0; combo=0; lives=3; round=0; basketX=.5; lastTime=0;
+    state="playing";
+    els.startOverlay.classList.add("hidden");
+    els.endOverlay.classList.add("hidden");
+    updateHud();
+    nextRound();
+    rafId=requestAnimationFrame(loop);
+  }
+
+  function nextRound(){
+    if(state!=="playing") return;
+    clearWords();
+    if(round>=totalRounds || lives<=0){
+      finishGame();
+      return;
+    }
+    round++;
+    const correct = WORDS[Math.floor(Math.random()*WORDS.length)];
+    const distractors = shuffle(WORDS.filter(w=>w.en!==correct.en)).slice(0,2);
+    const choices = shuffle([{...correct,correct:true},...distractors.map(w=>({...w,correct:false}))]);
+    els.prompt.textContent=correct.zh;
+    updateHud();
+    const width=els.game.clientWidth;
+    const slotGap=width/choices.length;
+    choices.forEach((w,i)=>{
+      const el=document.createElement("div");
+      el.className="word";
+      el.textContent=w.en;
+      el.dataset.correct=String(w.correct);
+      els.game.appendChild(el);
+      const x=Math.min(width-136,Math.max(4,slotGap*i+slotGap/2-66));
+      el.style.left=x+"px";
+      falling.push({el,x,y:-64,speed:95+round*7+Math.random()*24,correct:w.correct});
+    });
+  }
+
+  function finishGame(){
+    state="finished";
+    cancelAnimationFrame(rafId);
+    clearWords();
+    els.endOverlay.classList.remove("hidden");
+    const perfect=lives===3 && score>=100;
+    els.endTitle.textContent = perfect ? "🌟 太厲害了！" : lives>0 ? "🎉 完成挑戰！" : "💪 再挑戰一次！";
+    els.endText.textContent=`你的分數是 ${score} 分，最高連擊 ${combo}。`;
+    beep("done");
+  }
+
+  function resolveCatch(obj){
+    if(state!=="playing") return;
+    if(obj.correct){
+      score += 10 + Math.min(combo*2,10);
+      combo += 1;
+      setMessage("答對了！繼續保持！","good");
+      flash(combo>=3?`🔥 Combo x${combo}`:"✨ +10");
+      beep("good");
+    }else{
+      lives -= 1;
+      combo = 0;
+      setMessage("差一點！看看中文提示，再試一次。","bad");
+      flash("再試一次");
+      beep("bad");
+    }
+    updateHud();
+    state="feedback";
+    clearWords();
+    setTimeout(()=>{
+      if(lives<=0 || round>=totalRounds){ finishGame(); }
+      else { state="playing"; nextRound(); }
+    },420);
+  }
+
+  function loop(ts){
+    if(state!=="playing"){
+      if(state==="feedback") rafId=requestAnimationFrame(loop);
+      return;
+    }
+    if(!lastTime) lastTime=ts;
+    const dt=Math.min((ts-lastTime)/1000,.04);
+    lastTime=ts;
+
+    const gameRect=els.game.getBoundingClientRect();
+    const basketRect=els.basket.getBoundingClientRect();
+
+    for(const obj of falling){
+      obj.y += obj.speed*dt;
+      obj.el.style.transform=`translateY(${obj.y}px)`;
+      const r=obj.el.getBoundingClientRect();
+      const overlap = !(r.right < basketRect.left || r.left > basketRect.right || r.bottom < basketRect.top || r.top > basketRect.bottom);
+      if(overlap){ resolveCatch(obj); break; }
+      if(obj.y > gameRect.height+20){
+        if(obj.correct){
+          lives -= 1; combo=0; updateHud();
+          setMessage("正確單字掉下去了，再來一題！","bad");
+          state="feedback"; clearWords();
+          setTimeout(()=>{ if(lives<=0||round>=totalRounds) finishGame(); else {state="playing";nextRound();}},420);
+          break;
+        }
+      }
+    }
+    if(state==="playing") rafId=requestAnimationFrame(loop);
+  }
+
+  function moveBasket(dir){
+    if(state!=="playing" && state!=="feedback") return;
+    basketX=Math.max(.08,Math.min(.92,basketX+dir*.09));
+    els.basket.style.left=(basketX*100)+"%";
+  }
+
+  let holdId=null;
+  function bindHold(btn,dir){
+    const start=(e)=>{e.preventDefault();moveBasket(dir);clearInterval(holdId);holdId=setInterval(()=>moveBasket(dir),70);};
+    const stop=()=>{clearInterval(holdId);holdId=null;};
+    btn.addEventListener("pointerdown",start);
+    btn.addEventListener("pointerup",stop);
+    btn.addEventListener("pointercancel",stop);
+    btn.addEventListener("pointerleave",stop);
+  }
+
+  window.addEventListener("keydown",(e)=>{
+    if(e.key==="ArrowLeft"){e.preventDefault();moveBasket(-1)}
+    if(e.key==="ArrowRight"){e.preventDefault();moveBasket(1)}
+  });
+
+  els.startBtn.addEventListener("click",startGame);
+  els.playAgainBtn.addEventListener("click",startGame);
+  els.restartBtn.addEventListener("click",resetGame);
+  els.soundBtn.addEventListener("click",()=>{
+    soundOn=!soundOn;
+    els.soundBtn.textContent=soundOn?"🔊":"🔇";
+    els.soundBtn.setAttribute("aria-label",soundOn?"關閉音效":"開啟音效");
+  });
+  bindHold(els.leftBtn,-1);
+  bindHold(els.rightBtn,1);
+
+  window.addEventListener("resize",()=>{
+    if(state==="playing"){
+      clearWords();
+      state="feedback";
+      setTimeout(()=>{if(state==="feedback"){state="playing";nextRound();}},120);
+    }
+  });
+
+  updateHud();
+})();
+</script>
+</body>
+</html>
